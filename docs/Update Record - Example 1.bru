@@ -1,0 +1,158 @@
+meta {
+  name: Update Record - Example 1
+  type: http
+  seq: 4
+}
+
+post {
+  url: http://172.31.162.211:8084/v1/update-record/messages
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "patient": {
+      "nhsNumber": "4857773456",
+      "dateOfBirth": "1983-08-08",
+      "surname": "LERONE",
+      "givenName": "Toby",
+      "gender": "male",
+      "postcode": "T0 BLR",
+      "nhsNumberVerificationStatus": "01"
+    },
+    "composition": {
+      "type": {
+        "system": "http://snomed.info/sct",
+        "code": "1659111000000107",
+        "display": "Community Pharmacy Blood Pressure Check Service"
+      },
+      "title": "The Dispensers - Community Pharmacist Blood Pressure Check Service"
+    },
+    "encounter": {
+      "occurredAt": "2023-08-08T00:00:00+01:00",
+      "performerODS": "A(*)",
+      "reasonCode": {
+        "system": "http://snomed.info/sct",
+        "code": "1659111000000107",
+        "display": "Community Pharmacy Blood Pressure Check Service"
+      }
+    },
+    "clinicalSummary": {
+      "freeText": "Patient eligible; BP taken; HR recorded; advice provided.",
+      "observations": [
+        {
+          "system": "http://snomed.info/sct",
+          "code": "163020007",
+          "display": "On examination - blood pressure reading",
+          "categoryCode": {
+            "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+            "code": "vital-signs",
+            "display": "Vital Signs"
+          },
+          "effectiveDateTime": "2023-08-08T00:00:00+01:00",
+          "issued": "2023-08-08T09:12:14.3021913+01:00",
+          "bodySite": {
+            "system": "http://snomed.info/sct",
+            "code": "40983000",
+            "display": "Structure of upper extremity between shoulder and elbow"
+          },
+          "components": [
+            {
+              "code": {
+                "system": "http://snomed.info/sct",
+                "code": "72313002",
+                "display": "Systolic arterial pressure"
+              },
+              "valueQuantity": {
+                "value": 125,
+                "unit": "millimeter of mercury",
+                "system": "http://unitsofmeasure.org",
+                "code": "mm[Hg]"
+              }
+            },
+            {
+              "code": {
+                "system": "http://snomed.info/sct",
+                "code": "1091811000000100",
+                "display": "Diastolic arterial pressure"
+              },
+              "valueQuantity": {
+                "value": 84,
+                "unit": "millimeter of mercury",
+                "system": "http://unitsofmeasure.org",
+                "code": "mm[Hg]"
+              }
+            }
+          ]
+        },
+        {
+          "system": "http://snomed.info/sct",
+          "code": "364075005",
+          "display": "Heart rate",
+          "categoryCode": {
+            "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+            "code": "vital-signs",
+            "display": "Vital Signs"
+          },
+          "effectiveDateTime": "2023-08-08T00:00:00+01:00",
+          "issued": "2023-08-08T09:12:14.3057014+01:00",
+          "valueQuantity": {
+            "value": 78,
+            "unit": "per minute",
+            "system": "http://unitsofmeasure.org",
+            "code": "{beats}/min"
+          },
+          "bodySite": {
+            "system": "http://snomed.info/sct",
+            "code": "368209003",
+            "display": "Right upper arm structure"
+          }
+        }
+      ],
+      "narrativeSections": [
+        {
+          "headingCode": "clinical-summary",
+          "headingDisplay": "Clinical summary",
+          "text": "Patient is above 40 and has walked in the Pharmacy for health check. A pharmacy technician approaches the patient to have a bp check subject to eligibility - Patient eligible."
+        },
+        {
+          "headingCode": "history",
+          "headingDisplay": "History",
+          "text": "Patient has family history of hypertension."
+        },
+        {
+          "headingCode": "information-and-advice-given",
+          "headingDisplay": "Information and advice given",
+          "text": "Advice given on healthy behaviours and recommended further blood pressure check within 5 years."
+        }
+      ]
+    },
+    "provenance": {
+      "author": {
+        "name": "Miss Di Spencer",
+        "identifiers": [
+          { "system": "https://fhir.provider.example/identifier/staff", "value": "5d7e5ef0-dddb-4cb3-905a-d21e26eb64e6" }
+        ],
+        "role": {
+          "system": "https://fhir.nhs.uk/STU3/CodeSystem/CareConnect-SDSJobRoleName-1",
+          "code": "R5220",
+          "display": "Pharmacy Technician"
+        }
+      },
+      "system": { "name": "PharmacySystem", "asid": "200000000115" }
+    },
+    "routing": {
+      "registeredPracticeODS": "FQW30"
+    },
+    "messageHeaderOptions": {
+      "businessAckRequested": true,
+      "infrastructureAckRequested": true,
+      "recipientType": "FI",
+      "messageDefinitionRef": "https://fhir.nhs.uk/MessageDefinition",
+      "senderReference": "urn:uuid:e224af1a-ed8b-4bb8-a854-f6d56f199bd6",
+      "localExtension": "None"
+    }
+  }
+  
+}

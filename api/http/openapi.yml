@@ -1,0 +1,597 @@
+openapi: 3.0.3
+info:
+  title: GP Connect Update Record Gateway
+  version: "1.1.0"
+  description: |
+    Submit a GP Connect **Update Record** message over MESH (ITK3 + FHIR STU3).
+    Payload supports full content; minimal must-haves are marked `required`.
+
+servers:
+  - url: https://api.example.com
+
+paths:
+  /v1/update-record/messages:
+    post:
+      summary: Submit Update Record
+      description: |
+        Accepts a domain-friendly JSON, builds an ITK3/FHIR Message (MessageHeader + ITK Document Bundle),
+        sets MESH workflow/routing, and sends. Returns an async tracking id.
+      operationId: submitUpdateRecord
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: header
+          name: Idempotency-Key
+          description: Idempotency token; same key+body returns the original result.
+          schema: { type: string, maxLength: 128 }
+        - in: header
+          name: X-Correlation-ID
+          description: Optional correlation id echoed in logs and responses.
+          schema: { type: string, maxLength: 128 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateRecordRequest'
+            examples:
+              minimal:
+                summary: Minimal (required-only)
+                value:
+                  patient:
+                    nhsNumber: "9876543210"
+                    dateOfBirth: "1978-02-17"
+                    surname: "SMITH"
+                    givenName: "JOANNE"
+                  clinicalSummary:
+                    freeText: "Attended with sore throat; mild erythema; safety-net advice given."
+                  provenance:
+                    author:
+                      name: "Jane Pharmacist"
+                    system:
+                      name: "MyPharmacyIT"
+                      asid: "200000000115"
+                  routing:
+                    registeredPracticeODS: "G85001"
+              exemplar_contraception:
+                summary: Contraception service (covers extensions + coded values)
+                value:
+                  patient:
+                    nhsNumber: "4857773456"
+                    dateOfBirth: "1985-08-08"
+                    surname: "Oakey"
+                    givenName: "Carrie"
+                    postcode: "SNG 2ME"
+                    gender: "female"
+                    nhsNumberVerificationStatus: "01"
+                  composition:
+                    type:
+                      system: "http://snomed.info/sct"
+                      code: "1659121000000101"
+                      display: "Community Pharmacy Contraception Service"
+                    title: "The Dispensers - Community Pharmacy Contraception Service"
+                  encounter:
+                    occurredAt: "2023-08-08T00:00:00Z"
+                    locationODS: "A(*)"
+                    performerODS: "A(*)"
+                    reasonCode:
+                      system: "http://snomed.info/sct"
+                      code: "1659121000000101"
+                      display: "Community Pharmacy Contraception Service"
+                    outcomeOfAttendance:
+                      system: "https://fhir.hl7.org.uk/STU3/CodeSystem/CareConnect-OutcomeOfAttendance-1"
+                      code: "1"
+                      display: "Discharged from Consultant's care (last attendance)"
+                  clinicalSummary:
+                    freeText: "BP high; supply not made; GP appt within 7 days."
+                    observations:
+                      - code:
+                          system: "http://snomed.info/sct"
+                          code: "163020007"
+                          display: "O/E - blood pressure"
+                        categoryCode:
+                          system: "http://terminology.hl7.org/CodeSystem/observation-category"
+                          code: "vital-signs"
+                          display: "Vital Signs"
+                        effectiveDateTime: "2023-08-08T00:00:00Z"
+                        issued: "2023-08-08T09:17:43Z"
+                        bodySite:
+                          system: "http://snomed.info/sct"
+                          code: "368209003"
+                          display: "Right upper arm structure"
+                        components:
+                          - code:
+                              system: "http://snomed.info/sct"
+                              code: "72313002"
+                              display: "Systolic arterial pressure"
+                            valueQuantity:
+                              value: 142
+                              unit: "millimeter of mercury"
+                              system: "http://unitsofmeasure.org"
+                              code: "mm[Hg]"
+                          - code:
+                              system: "http://snomed.info/sct"
+                              code: "271650006"
+                              display: "Diastolic blood pressure"
+                            valueQuantity:
+                              value: 90
+                              unit: "millimeter of mercury"
+                              system: "http://unitsofmeasure.org"
+                              code: "mm[Hg]"
+                      - code:
+                          system: "http://snomed.info/sct"
+                          code: "50373000"
+                          display: "Body height measure"
+                        categoryCode:
+                          system: "http://terminology.hl7.org/CodeSystem/observation-category"
+                          code: "vital-signs"
+                          display: "Vital Signs"
+                        valueQuantity:
+                          value: 157.48
+                          unit: "Centimeter"
+                          system: "http://unitsofmeasure.org"
+                          code: "cm"
+                      - code:
+                          system: "http://snomed.info/sct"
+                          code: "27113001"
+                          display: "Body weight"
+                        categoryCode:
+                          system: "http://terminology.hl7.org/CodeSystem/observation-category"
+                          code: "vital-signs"
+                          display: "Vital Signs"
+                        valueQuantity:
+                          value: 72
+                          unit: "kilogram"
+                          system: "http://unitsofmeasure.org"
+                          code: "kg"
+                      - code:
+                          system: "http://snomed.info/sct"
+                          code: "60621009"
+                          display: "Body mass index"
+                        categoryCode:
+                          system: "http://terminology.hl7.org/CodeSystem/observation-category"
+                          code: "vital-signs"
+                          display: "Vital Signs"
+                        valueQuantity:
+                          value: 29.2
+                          unit: "kilogram per square meter"
+                          system: "http://unitsofmeasure.org"
+                          code: "kg/m2"
+                      - code:
+                          system: "http://snomed.info/sct"
+                          code: "60001007"
+                          display: "Not pregnant"
+                        categoryCode:
+                          system: "http://terminology.hl7.org/CodeSystem/observation-category"
+                          code: "social-history"
+                          display: "Social History"
+                        valueCodeableConcept:
+                          system: "http://snomed.info/sct"
+                          code: "60001007"
+                          display: "Not pregnant"
+                        headingTag:
+                          system: "https://fhir.nhs.uk/CodeSystem/RecordStandardHeadings"
+                          code: "pregnancy-status"
+                          display: "Pregnancy status"
+                    narrativeSections:
+                      - headingCode: "clinical-summary"
+                        headingDisplay: "Clinical summary"
+                        text: "Blood pressure high so supply is not made. Referred to GP appointment within 7 days."
+                      - headingCode: "information-and-advice-given"
+                        headingDisplay: "Information and advice given"
+                        text: "Lifestyle advice provided."
+                  provenance:
+                    author:
+                      name: "Dr Medi Kai-Shun"
+                      identifiers:
+                        - system: "https://fhir.provider.example/identifier/staff"
+                          value: "d690b1da-..."
+                        - system: "https://fhir.hl7.org.uk/Id/gphc-number"
+                          value: "NNNNNNN"
+                      role:
+                        system: "https://fhir.nhs.uk/STU3/CodeSystem/CareConnect-SDSJobRoleName-1"
+                        code: "R1290"
+                        display: "Pharmacist"
+                    system:
+                      name: "MyPharmacyIT"
+                      asid: "200000000115"
+                  routing:
+                    registeredPracticeODS: "G85001"
+                  messageHeaderOptions:
+                    businessAckRequested: true
+                    infrastructureAckRequested: true
+                    recipientType: "FI"
+      responses:
+        "202":
+          description: Accepted for delivery (queued/sending to MESH).
+          headers:
+            X-Correlation-ID:
+              schema: { type: string }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SubmitAccepted' }
+        "400":
+          description: Validation error (missing fields or bad formats).
+          content: { application/json: { schema: { $ref: '#/components/schemas/ErrorResponse' } } }
+        "409":
+          description: Idempotency conflict (same key, different body).
+          content: { application/json: { schema: { $ref: '#/components/schemas/ErrorResponse' } } }
+        "422":
+          description: FHIR/profile validation failed when assembling the message.
+          content: { application/json: { schema: { $ref: '#/components/schemas/ErrorResponse' } } }
+        "502":
+          description: Upstream MESH transient error.
+          content: { application/json: { schema: { $ref: '#/components/schemas/ErrorResponse' } } }
+        "503":
+          description: Service unavailable (backoff/DLQ scenario).
+          content: { application/json: { schema: { $ref: '#/components/schemas/ErrorResponse' } } }
+        "504":
+          description: Send timeout (status may update later via polling).
+          content: { application/json: { schema: { $ref: '#/components/schemas/ErrorResponse' } } }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+
+    # ----- Root request -----
+    UpdateRecordRequest:
+      type: object
+      description: Full payload; minimal must-haves are required.
+      required: [ patient, clinicalSummary, provenance, routing ]
+      properties:
+        patient:        { $ref: '#/components/schemas/Patient' }
+        encounter:
+          allOf:
+            - $ref: '#/components/schemas/Encounter'
+          description: Primary encounter. Ignored if `encounters` is supplied.
+        encounters:
+          type: array
+          description: Multiple encounters; one should be role=primary (first is used if none marked).
+          maxItems: 5
+          items: { $ref: '#/components/schemas/EncounterWithRole' }
+        composition:    { $ref: '#/components/schemas/CompositionDetails' }
+        clinicalSummary: { $ref: '#/components/schemas/ClinicalSummary' }
+        # NEW
+        observations:
+          type: array
+          description: Observation resources referenced from Composition.section.
+          maxItems: 50
+          items: { $ref: '#/components/schemas/ObservationInput' }
+        # NEW
+        narrativeSections:
+          type: array
+          description: Additional narrative sections (ClinicalImpressions) by Record Standard Heading.
+          maxItems: 20
+          items: { $ref: '#/components/schemas/NarrativeBlock' }
+        attachments:
+          type: array
+          description: Optional attachments (become DocumentReference).
+          maxItems: 10
+          items: { $ref: '#/components/schemas/Attachment' }
+        provenance:     { $ref: '#/components/schemas/Provenance' }
+        routing:        { $ref: '#/components/schemas/Routing' }
+        messageHeaderOptions:
+          $ref: '#/components/schemas/MessageHeaderOptions'
+
+    # ----- Parties & core -----
+    Patient:
+      type: object
+      required: [ nhsNumber, dateOfBirth, surname ]
+      properties:
+        nhsNumber:
+          type: string
+          pattern: '^\d{10}$'
+        dateOfBirth:
+          type: string
+          format: date
+        surname:   { type: string, minLength: 1 }
+        givenName: { type: string }
+        postcode:  { type: string }
+        gender:
+          type: string
+          enum: [ male, female, other, unknown ]
+        nhsNumberVerificationStatus:
+          type: string
+          description: CareConnect NHS Number Verification Status code (e.g., "01").
+          pattern: '^\w{1,4}$'
+
+    Author:
+      type: object
+      properties:
+        name:
+          type: string
+        professionalCode: # <— add this
+          type: string
+          description: Staff professional code
+        identifiers:
+          type: array
+          items:
+            $ref: '#/components/schemas/Identifier'
+        role:
+          $ref: '#/components/schemas/CodeableConcept'
+      required: [ name ]
+
+    Identifier:
+      type: object
+      properties:
+        system: { type: string, format: uri }
+        value:  { type: string }
+      required: [system, value]
+
+    CodeableConcept:
+      type: object
+      properties:
+        system:  { type: string, format: uri }
+        code:    { type: string }
+        display: { type: string }
+      required: [system, code]
+
+    SystemProvenance:
+      type: object
+      properties:
+        name:
+          type: string
+        asid:
+          type: string
+      required: [name]
+
+    Provenance:
+      type: object
+      properties:
+        author:
+          $ref: '#/components/schemas/Author'      # <-- named, reused
+        system:
+          $ref: '#/components/schemas/SystemProvenance'
+      required: [ author ]
+
+    Routing:
+      type: object
+      required: [ registeredPracticeODS ]
+      properties:
+        registeredPracticeODS:
+          type: string
+          description: ODS code of the patient’s registered practice.
+
+    # ----- Encounters -----
+    Encounter:
+      type: object
+      description: Context of the consultation.
+      properties:
+        occurredAt:
+          type: string
+          format: date-time
+        locationODS:
+          type: string
+        performerODS:
+          type: string
+        serviceType:
+          type: string
+          description: Local label for service type.
+        reason:
+          type: string
+          description: Free-text reason (use reasonCode for coded value).
+        reasonCode:
+          $ref: '#/components/schemas/CodedItem'
+        outcomeOfAttendance:
+          $ref: '#/components/schemas/CodedItem'
+
+    EncounterWithRole:
+      allOf:
+        - $ref: '#/components/schemas/Encounter'
+        - type: object
+          required: [ occurredAt ]
+          properties:
+            role:
+              type: string
+              enum: [ primary, related ]
+              description: Primary encounter becomes Composition.encounter.
+
+    # ----- Composition -----
+    CompositionDetails:
+      type: object
+      description: Document-level metadata for the inner Composition.
+      properties:
+        type:
+          $ref: '#/components/schemas/CodedItem'
+        title:
+          type: string
+          maxLength: 512
+
+    NarrativeBlock:
+      type: object
+      description: A free-text narrative section mapped to a ClinicalImpression resource with a Record Standard Headings tag.
+      properties:
+        headingCode:
+          type: string
+          description: Record Standard Headings code (e.g. clinical-summary, history).
+          enum: [ clinical-summary, history, information-and-advice-given ]
+        headingDisplay:
+          type: string
+          description: Human readable heading text.
+        text:
+          type: string
+          description: Narrative body.
+      required: [ headingCode, text ]
+
+    # ----- Clinical content -----
+    ClinicalSummary:
+      type: object
+      required: [ freeText ]
+      properties:
+        freeText:
+          type: string
+          maxLength: 20000
+          description: Narrative summary; becomes Composition narrative/section text.
+        problems:
+          type: array
+          maxItems: 100
+          items: { $ref: '#/components/schemas/CodedItem' }
+          description: Diagnoses/problems → Condition
+        medicationsSupplied:
+          type: array
+          maxItems: 100
+          items: { $ref: '#/components/schemas/MedicationSupplied' }
+        allergies:
+          type: array
+          maxItems: 50
+          items: { $ref: '#/components/schemas/Allergy' }
+
+    CodedItem:
+      type: object
+      required: [ system, code ]
+      properties:
+        system:  { type: string, format: uri }
+        code:    { type: string }
+        display: { type: string }
+        text:    { type: string }
+
+    MedicationSupplied:
+      type: object
+      required: [ status, medication ]
+      properties:
+        status: { type: string, enum: [ preparation, in-progress, on-hold, completed, entered-in-error, stopped, declined, unknown ] }
+        category: { $ref: '#/components/schemas/CodedItem' }   # optional: community, inpatient, etc.
+        medication: { $ref: '#/components/schemas/CodedItem' }   # DM+D preferred
+        quantity: { $ref: '#/components/schemas/Quantity' }
+        daysSupply: { $ref: '#/components/schemas/Quantity' }
+        whenPrepared: { type: string, format: date }
+        whenHandedOver: { type: string, format: date }
+        supplyType: { $ref: '#/components/schemas/CodedItem' }   # CareConnect-MedicationSupplyType
+        dosageInstruction:
+          type: object
+          properties:
+            text: { type: string }
+            patientInstruction: { type: string }
+            timing:
+              type: object
+              properties:
+                frequency: { type: integer }
+                period: { type: number }
+                periodUnit: { type: string }
+            route: { $ref: '#/components/schemas/CodedItem' }
+            maxDosePerPeriod:
+              type: object
+              properties:
+                numerator: { $ref: '#/components/schemas/Quantity' }
+                denominator: { $ref: '#/components/schemas/Quantity' }
+
+    Allergy:
+      type: object
+      required: [ code, system ]
+      properties:
+        code:    { type: string }
+        system:  { type: string, format: uri }
+        display: { type: string }
+        criticality:
+          type: string
+          enum: [ low, high, unable-to-assess ]
+
+    # ----- Observation (rich) -----
+    Quantity:
+      type: object
+      required: [ value ]
+      properties:
+        value:  { type: number }
+        unit:   { type: string }
+        system: { type: string, format: uri }
+        code:   { type: string }
+
+    ObservationComponent:
+      type: object
+      required: [ code ]
+      properties:
+        code:            { $ref: '#/components/schemas/CodedItem' }
+        valueQuantity:   { $ref: '#/components/schemas/Quantity' }
+        valueCodeableConcept: { $ref: '#/components/schemas/CodedItem' }
+
+    ObservationInput:
+      type: object
+      required: [ id, status, code, subjectRef, contextEncounterRef, effectiveDateTime ]
+      properties:
+        id: { type: string, description: Client-supplied UUID to reference from Composition.section }
+        status: { type: string, enum: [ registered, preliminary, final, amended ], default: final }
+        category: { $ref: '#/components/schemas/CodedItem' }
+        code: { $ref: '#/components/schemas/CodedItem' }
+        subjectRef: { type: string, description: Patient UUID }
+        contextEncounterRef: { type: string, description: Encounter UUID }
+        effectiveDateTime: { type: string, format: date-time }
+        issued: { type: string, format: date-time }
+        performerRef: { type: string, description: Practitioner UUID }
+        bodySite: { $ref: '#/components/schemas/CodedItem' }
+        components:
+          type: array
+          items:
+            $ref: '#/components/schemas/ObservationComponent'
+
+    # ----- Attachments -----
+    Attachment:
+      type: object
+      required: [ contentType, base64 ]
+      properties:
+        contentType: { type: string }
+        title:       { type: string, maxLength: 200 }
+        base64:      { type: string, description: 'Base64-encoded content' }
+        description: { type: string }
+
+    # ----- Message header knobs (optional) -----
+    MessageHeaderOptions:
+      type: object
+      properties:
+        businessAckRequested:       { type: boolean, default: true }
+        infrastructureAckRequested: { type: boolean, default: true }
+        recipientType:
+          type: string
+          description: ITK RecipientType code (e.g., FI).
+        messageDefinitionRef:
+          type: string
+          format: uri
+        localExtension:
+          type: string
+        senderReference:
+          type: string
+
+    # ----- Responses & errors -----
+    SubmitAccepted:
+      type: object
+      properties:
+        messageId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [ accepted, queued, sending ]
+        meshMessageId:
+          type: string
+          nullable: true
+        links:
+          type: object
+          properties:
+            self:   { type: string, format: uri }
+            status: { type: string, format: uri }
+
+    ErrorResponse:
+      type: object
+      required: [ error ]
+      properties:
+        error:
+          type: object
+          required: [ code, message ]
+          properties:
+            code:
+              type: string
+              enum:
+                - VALIDATION_ERROR
+                - IDEMPOTENCY_CONFLICT
+                - FHIR_VALIDATION_FAILED
+                - MESH_UPSTREAM_ERROR
+                - SERVICE_UNAVAILABLE
+                - SEND_TIMEOUT
+            message: { type: string }
+            details:
+              type: object
+              additionalProperties: true
